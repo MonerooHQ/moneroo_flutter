@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.5] - 2025-03-29
+
+### Added
+- GitHub Actions workflow for automated testing
+- Enhanced test coverage with additional test cases
+- Code analysis improvements
+- Excluded generated `.g.dart` files from analysis
+
 ## [0.3.2] - 2025-02-22
 
 ### Added
