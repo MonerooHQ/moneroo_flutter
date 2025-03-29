@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.5] - 2025-03-29
+## [0.3.3] - 2025-03-29
 
 ### Added
 - GitHub Actions workflow for automated testing
