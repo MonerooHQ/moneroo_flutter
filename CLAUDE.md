@@ -2,6 +2,63 @@
 
 Guidance for Claude Code and other AI agents working in this repository.
 
+## Project overview
+
+`moneroo_flutter_sdk` is a Flutter package (v0.3.4) that enables mobile apps to integrate Moneroo's African payment gateway. It targets Android and iOS only and is published on pub.dev. Consumers add it as a dependency to their Flutter apps and use either the pre-built `Moneroo` widget or the raw `MonerooApi` class to process payments via mobile money, cards, crypto, and bank transfers across 15+ African currencies.
+
+## Tech stack
+
+- Dart SDK `^3.3.0`, Flutter `>=3.0.0`
+- `dio ^5.4.1` — HTTP client for Moneroo REST API calls
+- `webview_flutter ^4.7.0` + platform implementations (Android `^4.3.2`, WKWebView `^3.13.0`) — renders the hosted checkout page
+- `flutter_spinkit ^5.2.0` — loading indicator while checkout URL is fetched
+- `json_annotation ^4.8.1` / `json_serializable ^6.7.1` + `build_runner ^2.4.8` — code-generated JSON serialization (`.g.dart` files)
+- `very_good_analysis ^7.0.0` — strict lint rules (`analysis_options.5.1.0.yaml`)
+- `mocktail ^1.0.3` — mocking in tests
+- External service: `https://api.moneroo.io` (v1)
+
+## Getting started
+
+```bash
+# Install package dependencies
+flutter pub get
+
+# Regenerate JSON serialization code after editing a model
+dart run build_runner build --delete-conflicting-outputs
+```
+
+No `.env` or secrets setup is required in the SDK itself; callers supply an API key at runtime.
+
+## Common commands
+
+| Task | Command |
+|---|---|
+| Get dependencies | `flutter pub get` |
+| Analyze code | `flutter analyze` |
+| Test | `flutter test` |
+| Regenerate `.g.dart` files | `dart run build_runner build --delete-conflicting-outputs` |
+| Run example app | `cd example && flutter run` |
+
+## Architecture
+
+The package is entirely under `lib/src/` with a single public barrel file at `lib/moneroo_flutter_sdk.dart`.
+
+- `lib/src/api/` — `MonerooApi` (Dio-based wrapper for `POST /v1/payments/initialize`, `GET /v1/payments/:id/verify`, `GET /utils/payout/methods`) and `Endpoints` constants.
+- `lib/src/models/` — JSON-serializable data classes (`MonerooPayment`, `MonerooPaymentInfos`, `MonerooCustomer`, `MonerooRemoteMethod`, `MonerooApiResponse`). All have hand-written `.dart` files and generated `.g.dart` counterparts.
+- `lib/src/commons/` — `enums.dart` (currencies, payment methods, statuses, API version) and `exceptions.dart` (`MonerooException`, `ServiceUnavailableException`).
+- `lib/src/widgets/` — `Moneroo` (a `StatefulWidget` that calls `MonerooApi.initPayment`, renders a `WebViewController` with the checkout URL, monitors `onUrlChange` for the callback URL, then calls `onPaymentCompleted` or `onError`).
+- `test/src/moneroo_api_test.dart` — integration-style tests that call the live API; requires a real API key substituted for `'YOUR-API-KEY'`.
+- `example/` — standalone Flutter app demonstrating both widget and API usage.
+
+## Conventions
+
+- Lint rules enforced via `very_good_analysis`; the `analysis_options.yaml` excludes generated `*.g.dart` files. CI runs `flutter analyze` on every push/PR to `main`.
+- All public symbols must have doc comments; the 80-char line limit is suppressed only where URLs make compliance impossible (`// ignore_for_file: lines_longer_than_80_chars`).
+- JSON models use `json_serializable`; after editing any model annotated with `@JsonSerializable`, re-run `build_runner` to regenerate the `.g.dart` file — never edit `.g.dart` files manually.
+- The `Moneroo` widget detects payment completion by watching for a URL that does not contain `'moneroo'`; the `callbackUrl` parameter feeds the return URL passed to the API.
+- Sandbox mode is toggled with `sandbox: true` on both `MonerooApi` and the `Moneroo` widget; no separate API key is needed.
+- Platform support is explicitly limited to `android` and `ios` in `pubspec.yaml`; do not add web or desktop targets to the SDK package without also implementing or replacing the `webview_flutter` dependency.
+
 ## Git Conventions
 
 ### 1. Branch names
